@@ -17,9 +17,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("error reading config: %v", err)
 	}
-	fmt.Printf("Read config: %+v\n", cfg)
+	// fmt.Printf("Read config: %+v\n", cfg)
 	db, err := sql.Open("postgres", cfg.DbUrl)
-
+	if err != nil {
+		log.Fatalf("error connecting to db: %v", err)
+	}
+	defer db.Close()
 	dbQueries := database.New(db)
 
 	gatorState := &state {
@@ -32,22 +35,22 @@ func main() {
 	}
 	commandRegistry.register("login", handleLogin)
 	commandRegistry.register("register", handleRegister)
+	commandRegistry.register("reset", handleReset)
 
 	if len(os.Args) < 2 {
 		fmt.Printf("Usage: cli <command> [args...]")
 		os.Exit(1)
 	}
 	cmd := command {
-		name: os.Args[1],
-		args: os.Args[2:],
+		Name: os.Args[1],
+		Args: os.Args[2:],
 	}
 
 	err = commandRegistry.run(gatorState, cmd)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
-	// cfg.SetUser("cody")	
+
 }
 
 type state struct {

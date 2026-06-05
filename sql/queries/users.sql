@@ -13,5 +13,9 @@ SELECT *
 FROM users
 WHERE name = $1;
 
--- name: DeleteAllUsers :one
-DELETE FROM users
+-- name: DeleteAllUsers :exec
+DELETE FROM users;
+
+-- name: GetAllUser :many
+SELECT *
+FROM users''

@@ -3,8 +3,8 @@ package main
 import "fmt"
 
 type command struct {
-	name	string
-	args	[]string
+	Name	string
+	Args	[]string
 }
 
 type commands struct {
@@ -12,7 +12,7 @@ type commands struct {
 }
 
 func (c *commands) run(s *state, cmd command) error {
-	f, exist := c.registry[cmd.name]
+	f, exist := c.registry[cmd.Name]
 	if exist == false {
 		return fmt.Errorf("Command does not exist.\n")
 	}
