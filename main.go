@@ -1,11 +1,15 @@
 package main
 
 import (
+	"database/sql"
+
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/cmilliron/bootdev-gator-go/internal/config"
+	"github.com/cmilliron/bootdev-gator-go/internal/database"
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -14,7 +18,12 @@ func main() {
 		log.Fatalf("error reading config: %v", err)
 	}
 	fmt.Printf("Read config: %+v\n", cfg)
+	db, err := sql.Open("postgres", cfg.DbUrl)
+
+	dbQueries := database.New(db)
+
 	gatorState := &state {
+		db: dbQueries,
 		cfg: &cfg,
 	}
 
@@ -22,6 +31,7 @@ func main() {
 		registry: map[string]func(*state, command) error{},
 	}
 	commandRegistry.register("login", handleLogin)
+	commandRegistry.register("register", handleRegister)
 
 	if len(os.Args) < 2 {
 		fmt.Printf("Usage: cli <command> [args...]")
@@ -42,5 +52,6 @@ func main() {
 
 type state struct {
 	cfg 	*config.Config
+	db  	*database.Queries
 }
 
