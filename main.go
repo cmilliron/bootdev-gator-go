@@ -38,6 +38,7 @@ func main() {
 	commandRegistry.register("reset", handleReset)
 	commandRegistry.register("users", handleUsers)
 	commandRegistry.register("agg", handleAgg)
+	commandRegistry.register("addfeed", handleAddFeed)
 
 	if len(os.Args) < 2 {
 		fmt.Printf("Usage: cli <command> [args...]")
