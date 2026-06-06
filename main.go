@@ -38,8 +38,14 @@ func main() {
 	commandRegistry.register("reset", handleReset)
 	commandRegistry.register("users", handleUsers)
 	commandRegistry.register("agg", handleAgg)
-	commandRegistry.register("addfeed", handleAddFeed)
 	commandRegistry.register("feeds", handleFeeds)
+	
+	// Protected Commands
+	commandRegistry.register("addfeed", middlewareLoggedIn(handleAddFeed))
+	commandRegistry.register("follow", middlewareLoggedIn(handleFollow))
+	commandRegistry.register("following", middlewareLoggedIn(handleFollowing))
+	commandRegistry.register("unfollow", middlewareLoggedIn(handleUnFollow))
+
 
 	if len(os.Args) < 2 {
 		fmt.Printf("Usage: cli <command> [args...]")
