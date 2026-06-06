@@ -9,17 +9,12 @@ import (
 	"github.com/google/uuid"
 )
 
-func handleAddFeed(s *state, cmd command) error {
+func handleAddFeed(s *state, cmd command, user database.User) error {
 	if len(cmd.Args) != 2 {
 		return fmt.Errorf("usage: %s <name> <url>", cmd.Name)
 	}
 	feedName := cmd.Args[0]
 	feedUrl := cmd.Args[1]
-
-	user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
-	if err != nil {
-		return fmt.Errorf("Error fetching user: \n%w\n", err)
-	}
 
 	feed, err := s.db.CreateFeed(context.Background(), database.CreateFeedParams{
 		ID: uuid.New(),
@@ -34,6 +29,11 @@ func handleAddFeed(s *state, cmd command) error {
 	}
 	
 	printFeed(feed)
+
+	err = CreateFollow(s, feed.ID, user.ID)
+	if err != nil {
+		return fmt.Errorf("couldn't create feed follow: %w", err)
+	}
 
 	return nil
 }
