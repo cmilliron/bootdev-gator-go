@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"time"
+	// "github.com/cmilliron/bootdev-gator-go/internal/database"
 )
 
 type RSSFeed struct {
@@ -66,4 +67,26 @@ func cleanFeed(feed *RSSFeed) {
 		feed.Channel.Item[i] = item
 	}
 
+}
+
+
+func scrapeFeeds(s *state) error {
+	nextFeed, err := s.db.GetNextFeedToFetch(context.Background())
+	if err != nil {
+		return fmt.Errorf("Error fetching next feed: %w", err)
+	}
+
+	_, err = s.db.MarkFeedFetched(context.Background(), nextFeed.ID)
+	if err != nil {
+		return fmt.Errorf("Error updating time: %w\n", err)
+	}
+
+	feedItems, err := fetchFeed(context.Background(), nextFeed.Url)
+
+	fmt.Printf("Fetching for %s", nextFeed.Name)
+	for _, item := range feedItems.Channel.Item {
+		fmt.Printf(" - %s\n", item.Title)
+	}
+
+	return nil
 }

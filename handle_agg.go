@@ -1,24 +1,34 @@
 package main
 
 import (
-	"context"
 	"fmt"
+	"time"
 )
 
 func handleAgg(s *state, cmd command) error {
 	fmt.Printf("\nRunning %s...\n", cmd.Name)
-	feed, err := fetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+		
+	if len(cmd.Args) != 1 {
+		return fmt.Errorf("usage: %s <duration in seconds>", cmd.Name)
+	}
+	duration := cmd.Args[0]
+	scrapeInternval, err := time.ParseDuration(duration)
 	if err != nil {
-		return fmt.Errorf("couldn't fetch feed: %w", err)
+		return fmt.Errorf("error parsing time: %w", err)
 	}
 
-	fmt.Println("Here are the posts:")
-	// for _, feed := range feeds.Channel.Item {
-	// 	title := html.UnescapeString(feed.Title)
-	// 	d := html.UnescapeString(feed.Description)
-	// 	fmt.Printf(" - %s: %s\n", title, d[:100])
-	// }
+	ticker := time.NewTicker(scrapeInternval)
 
-	fmt.Printf("Feed:\n%v\n", feed)
+	defer ticker.Stop()
+
+	fmt.Printf("Collecting feeds every %s", duration)
+	for t := range ticker.C {
+		fmt.Printf("Fetching now: %v\n", t)
+		err = scrapeFeeds(s)
+		if err != nil {
+			return fmt.Errorf("couldn't fetch feed: %w", err)
+		}
+	}
+
 	return nil
 }
