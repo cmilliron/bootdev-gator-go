@@ -2,13 +2,16 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/xml"
 	"fmt"
 	"html"
 	"io"
 	"net/http"
 	"time"
-	// "github.com/cmilliron/bootdev-gator-go/internal/database"
+
+	"github.com/cmilliron/bootdev-gator-go/internal/database"
+	"github.com/google/uuid"
 )
 
 type RSSFeed struct {
@@ -85,8 +88,49 @@ func scrapeFeeds(s *state) error {
 
 	fmt.Printf("Fetching for %s", nextFeed.Name)
 	for _, item := range feedItems.Channel.Item {
-		fmt.Printf(" - %s\n", item.Title)
+		date, err := parseCustomTime(item.PubDate)
+		if err != nil {
+			fmt.Errorf("couldn't Parce time: %w\n", err)
+			date = time.Now()
+		}
+		fmt.Printf(" - %s: %s\n", item.Title, item.PubDate)
+		newPost, err := s.db.CreatePost(
+			context.Background(),
+			database.CreatePostParams{
+				ID: uuid.New(),
+				CreatedAt: time.Now().UTC(),
+				UpdatedAt: time.Now().UTC(),
+				Title: sql.NullString {
+					String: item.Title,
+					Valid: true,
+				},
+				Url: sql.NullString {
+					String: item.Link,
+					Valid: true,
+				},
+				Description: sql.NullString {
+					String: item.Description,
+					Valid: true,
+				},
+				PublishedAt: sql.NullTime {
+					Time: date,
+   					Valid: true,
+				},
+				Unread: true,
+				FeedID: nextFeed.ID,
+			},
+		)
+		if err != nil {
+			fmt.Printf("Error creating %s\n %w\n", item.Title, err)
+		}
+		fmt.Printf("Post %s add to database", newPost.Title.String)		
 	}
 
 	return nil
+}
+
+func parseCustomTime(dateStr string) (time.Time, error) {
+	layout := "Mon, 2 Jan 2006 15:04:05"
+	
+	return time.Parse(layout, dateStr)
 }
